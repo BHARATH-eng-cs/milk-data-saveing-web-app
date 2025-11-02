@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Milk Record Management</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f4f4f4;
+      color: #333;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      text-align: center;
+      color: #0056b3;
+      margin-bottom: 20px;
+    }
+
+    form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 30px;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      background-color: #f9f9f9;
+    }
+
+    form div {
+      display: flex;
+      flex-direction: column;
+    }
+
+    label {
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    input[type="time"] {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+
+    button {
+      grid-column: span 2;
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    table th, table td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+    }
+
+    table th {
+      background-color: #007bff;
+      color: white;
+      font-weight: bold;
+    }
+
+    table tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+
+    .delete-btn, .edit-btn {
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s ease;
+    }
+
+    .delete-btn {
+      background-color: #dc3545;
+    }
+
+    .delete-btn:hover {
+      background-color: #c82333;
+    }
+
+    .edit-btn {
+      background-color: #28a745;
+    }
+
+    .edit-btn:hover {
+      background-color: #218838;
+    }
+
+    tfoot td {
+      font-weight: bold;
+      background-color: #e9ecef;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Milk Record Management</h1>
+
+    <form id="milkEntryForm">
+      <div>
+        <label for="userName">User Name:</label>
+        <input type="text" id="userName" required>
+      </div>
+      <div>
+        <label for="milkLiters">Milk Liters:</label>
+        <input type="number" id="milkLiters" step="0.01" min="0" required>
+      </div>
+      <div>
+        <label for="entryDate">Date:</label>
+        <input type="date" id="entryDate" required>
+      </div>
+      <div>
+        <label for="entryTime">Time:</label>
+        <input type="time" id="entryTime" required>
+      </div>
+      <button type="submit">Add Entry</button>
+    </form>
+
+    <h2>Milk Records</h2>
+    <table id="milkRecordsTable">
+      <thead>
+        <tr>
+          <th>User Name</th>
+          <th>Milk Liters</th>
+          <th>Date</th>
+          <th>Time</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Records will appear here -->
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="5" id="totalLitersCell">Total Milk: 0 Liters</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const milkEntryForm = document.getElementById('milkEntryForm');
+      const milkRecordsTableBody = document.querySelector('#milkRecordsTable tbody');
+      const totalLitersCell = document.getElementById('totalLitersCell');
+
+      let milkRecords = JSON.parse(localStorage.getItem('milkRecords')) || [];
+      let editIndex = null;
+
+      function renderRecords() {
+        milkRecordsTableBody.innerHTML = '';
+        let total = 0;
+
+        milkRecords.forEach((record, index) => {
+          const row = milkRecordsTableBody.insertRow();
+          row.innerHTML = `
+            <td>${record.userName}</td>
+            <td>${record.milkLiters}</td>
+            <td>${record.entryDate}</td>
+            <td>${record.entryTime}</td>
+            <td>
+              <button class="edit-btn" data-index="${index}">Edit</button>
+              <button class="delete-btn" data-index="${index}">Delete</button>
+            </td>
+          `;
+          total += parseFloat(record.milkLiters);
+        });
+
+        totalLitersCell.textContent = `Total Milk: ${total.toFixed(2)} Liters`;
+        addActionListeners();
+      }
+
+      function saveRecords() {
+        localStorage.setItem('milkRecords', JSON.stringify(milkRecords));
+      }
+
+      function addActionListeners() {
+        document.querySelectorAll('.delete-btn').forEach(button => {
+          button.onclick = (event) => {
+            const index = event.target.dataset.index;
+            milkRecords.splice(index, 1);
+            saveRecords();
+            renderRecords();
+          };
+        });
+
+        document.querySelectorAll('.edit-btn').forEach(button => {
+          button.onclick = (event) => {
+            const index = event.target.dataset.index;
+            const record = milkRecords[index];
+            document.getElementById('userName').value = record.userName;
+            document.getElementById('milkLiters').value = record.milkLiters;
+            document.getElementById('entryDate').value = record.entryDate;
+            document.getElementById('entryTime').value = record.entryTime;
+            editIndex = index;
+            milkEntryForm.querySelector('button').textContent = 'Update Entry';
+          };
+        });
+      }
+
+      milkEntryForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const userName = document.getElementById('userName').value.trim();
+        const milkLiters = parseFloat(document.getElementById('milkLiters').value);
+        const entryDate = document.getElementById('entryDate').value;
+        const entryTime = document.getElementById('entryTime').value;
+
+        if (userName && !isNaN(milkLiters) && entryDate && entryTime) {
+          const newRecord = { userName, milkLiters, entryDate, entryTime };
+
+          if (editIndex !== null) {
+            milkRecords[editIndex] = newRecord;
+            editIndex = null;
+            milkEntryForm.querySelector('button').textContent = 'Add Entry';
+          } else {
+            milkRecords.push(newRecord);
+          }
+
+          saveRecords();
+          renderRecords();
+          milkEntryForm.reset();
+        } else {
+          alert('Please fill in all fields correctly.');
+        }
+      });
+
+      renderRecords();
+    });
+  </script>
+</body>
+</html>
